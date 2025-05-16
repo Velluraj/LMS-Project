@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Student Interaction</h2>
+
+<h3>View Enrolled Students</h3>
+<p>(List of enrolled students here)</p>
+
+<h3>Send Assignment</h3>
+<form method="post">
+    <label>Course: <input type="text" name="course"></label><br>
+    <label>Assignment Details: <textarea name="details"></textarea></label><br>
+    <button type="submit">Send</button>
+</form>
+
+<h3>Messages / Chats</h3>
+<p>(Chat UI placeholder)</p>
+
+<h3>Respond to Queries</h3>
+<form method="post">
+    <label>Query ID: <input type="text" name="query_id"></label><br>
+    <label>Response: <textarea name="response"></textarea></label><br>
+    <button type="submit">Send</button>
+</form>
+{% endblock %}
