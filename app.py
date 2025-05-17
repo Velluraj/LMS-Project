@@ -1,88 +1,114 @@
-from flask import Flask, render_template, request
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'
 
-# Connect to MySQL database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://flaskuser:yourpassword@localhost/portal_db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
-
-# Models
-class Student(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    reg_no = db.Column(db.String(100), unique=True)
-    batch = db.Column(db.String(10))
-    email = db.Column(db.String(120), unique=True)
-    password = db.Column(db.String(100))
-
-class Staff(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    staff_code = db.Column(db.String(100), unique=True)
-    department = db.Column(db.String(100))
-    email = db.Column(db.String(120), unique=True)
-    password = db.Column(db.String(100))
+# In-memory data store
+students = {}
+staff_members = {}
+reset_requests = {}
 
 @app.route('/', methods=['GET', 'POST'])
-def login():
+def index():
     if request.method == 'POST':
         form_type = request.form.get('form_type')
-        
+
+        # Student login
         if form_type == 'student_login':
             email = request.form['student_email']
             password = request.form['student_password']
-            student = Student.query.filter_by(email=email, password=password).first()
-            if student:
-                return f"Welcome, {student.name}!"
+            user = students.get(email)
+            if user and user['password'] == password:
+                flash('Student login successful!', 'success')
             else:
-                return "Invalid student credentials."
+                flash('Invalid student login.', 'error')
 
+        # Student signup
+        elif form_type == 'student_signup':
+            email = request.form['student_email_signup']
+            if email in students:
+                flash('Student already exists.', 'error')
+            elif request.form['student_password_signup'] != request.form['student_confirm_password']:
+                flash('Passwords do not match.', 'error')
+            else:
+                students[email] = {
+                    'name': request.form['student_name'],
+                    'reg': request.form['student_reg'],
+                    'batch': request.form['student_batch'],
+                    'password': request.form['student_password_signup']
+                }
+                flash('Student signed up successfully.', 'success')
+
+        # Staff login
         elif form_type == 'staff_login':
             code = request.form['staff_code']
-            department = request.form['staff_department']
+            dept = request.form['staff_department']
             password = request.form['staff_password']
-            staff = Staff.query.filter_by(staff_code=code, department=department, password=password).first()
-            if staff:
-                return f"Welcome, {staff.name}!"
+            for email, staff in staff_members.items():
+                if staff['code'] == code and staff['department'] == dept and staff['password'] == password:
+                    flash('Staff login successful!', 'success')
+                    break
             else:
-                return "Invalid staff credentials."
+                flash('Invalid staff login.', 'error')
 
-        elif form_type == 'student_signup':
-            name = request.form['student_name']
-            reg_no = request.form['student_reg']
-            batch = request.form['student_batch']
-            email = request.form['student_email_signup']
-            password = request.form['student_password_signup']
-            confirm = request.form['student_confirm_password']
-            if password == confirm:
-                new_student = Student(name=name, reg_no=reg_no, batch=batch, email=email, password=password)
-                db.session.add(new_student)
-                db.session.commit()
-                return "Student signed up successfully!"
-            else:
-                return "Passwords do not match."
-
+        # Staff signup
         elif form_type == 'staff_signup':
-            name = request.form['staff_name']
-            staff_code = request.form['staff_code_signup']
-            department = request.form['staff_department_signup']
             email = request.form['staff_email']
-            password = request.form['staff_password_signup']
-            confirm = request.form['staff_confirm_password']
-            if password == confirm:
-                new_staff = Staff(name=name, staff_code=staff_code, department=department, email=email, password=password)
-                db.session.add(new_staff)
-                db.session.commit()
-                return "Staff signed up successfully!"
+            if email in staff_members:
+                flash('Staff already exists.', 'error')
+            elif request.form['staff_password_signup'] != request.form['staff_confirm_password']:
+                flash('Passwords do not match.', 'error')
             else:
-                return "Passwords do not match."
+                staff_members[email] = {
+                    'name': request.form['staff_name'],
+                    'code': request.form['staff_code_signup'],
+                    'department': request.form['staff_department_signup'],
+                    'password': request.form['staff_password_signup']
+                }
+                flash('Staff signed up successfully.', 'success')
 
-    return render_template('login.html')
+        # Password reset verification
+        elif form_type == 'reset_password_request':
+            user_type = request.form['user_type']
+            identifier = request.form['reset_identifier']
+            session['reset_email'] = identifier
+            session['reset_user_type'] = user_type
+
+            if user_type == 'student' and identifier in students:
+                flash('Student verified. Enter new password below.', 'success')
+            elif user_type == 'staff' and identifier in staff_members:
+                flash('Staff verified. Enter new password below.', 'success')
+            else:
+                session.pop('reset_email', None)
+                session.pop('reset_user_type', None)
+                flash('User not found.', 'error')
+            return redirect(url_for('index'))
+
+        # Confirm new password
+        elif form_type == 'reset_password_confirm':
+            email = session.get('reset_email')
+            user_type = session.get('reset_user_type')
+            new_pass = request.form['new_password']
+            confirm_pass = request.form['confirm_password']
+
+            if not email or not user_type:
+                flash('Reset session expired.', 'error')
+            elif new_pass != confirm_pass:
+                flash('Passwords do not match.', 'error')
+            else:
+                if user_type == 'student' and email in students:
+                    students[email]['password'] = new_pass
+                    flash('Student password reset successfully.', 'success')
+                elif user_type == 'staff' and email in staff_members:
+                    staff_members[email]['password'] = new_pass
+                    flash('Staff password reset successfully.', 'success')
+                else:
+                    flash('User not found for reset.', 'error')
+                session.pop('reset_email', None)
+                session.pop('reset_user_type', None)
+            return redirect(url_for('index'))
+
+    return render_template('index.html')
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()  # Creates tables if they don't exist
     app.run(debug=True)
