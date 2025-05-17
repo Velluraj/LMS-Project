@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Assignments and Grading</h2>
+
+<h3>View Submitted Assignments</h3>
+<p>(List of assignments goes here)</p>
+
+<h3>Grade Assignment</h3>
+<form method="post">
+    <label>Assignment ID: <input type="text" name="assignment_id"></label><br>
+    <label>Grade: <input type="text" name="grade"></label><br>
+    <label>Feedback: <textarea name="feedback"></textarea></label><br>
+    <button type="submit">Submit Grade</button>
+</form>
+
+<h3>Auto Grading Option</h3>
+<p>(Auto grading logic placeholder)</p>
+{% endblock %}
