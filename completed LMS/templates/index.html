@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login & Signup</title>
+    <script>
+        function toggleForm(role) {
+            document.getElementById("student-forms").style.display = role === 'student' ? 'block' : 'none';
+            document.getElementById("staff-forms").style.display = role === 'staff' ? 'block' : 'none';
+        }
+    </script>
+</head>
+<body>
+    <h1>Login Portal</h1>
+    <button onclick="toggleForm('student')">Student</button>
+    <button onclick="toggleForm('staff')">Staff</button>
+
+    <div id="student-forms" style="display: block;">
+        <h2>Student Login</h2>
+        <form method="post">
+            <input type="hidden" name="form_type" value="student_login">
+            <input name="student_email" placeholder="Email" required>
+            <input type="password" name="student_password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+
+        <h3>Student Signup</h3>
+        <form method="post">
+            <input type="hidden" name="form_type" value="student_signup">
+            <input name="student_name" placeholder="Name" required>
+            <input name="student_reg" placeholder="Register No" required>
+            <select name="student_batch">
+                <option>2025</option>
+                <option>2026</option>
+                <option>2027</option>
+            </select>
+            <input name="student_email_signup" placeholder="Email" required>
+            <input type="password" name="student_password_signup" placeholder="Password" required>
+            <input type="password" name="student_confirm_password" placeholder="Confirm Password" required>
+            <button type="submit">Signup</button>
+        </form>
+    </div>
+
+    <div id="staff-forms" style="display: none;">
+        <h2>Staff Login</h2>
+        <form method="post">
+            <input type="hidden" name="form_type" value="staff_login">
+            <input name="staff_code" placeholder="Staff Code" required>
+            <input name="staff_department" placeholder="Department" required>
+            <input type="password" name="staff_password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+
+        <h3>Staff Signup</h3>
+        <form method="post">
+            <input type="hidden" name="form_type" value="staff_signup">
+            <input name="staff_name" placeholder="Name" required>
+            <input name="staff_code_signup" placeholder="Staff Code" required>
+            <input name="staff_department_signup" placeholder="Department" required>
+            <input name="staff_email" placeholder="Email" required>
+            <input type="password" name="staff_password_signup" placeholder="Password" required>
+            <input type="password" name="staff_confirm_password" placeholder="Confirm Password" required>
+            <button type="submit">Signup</button>
+        </form>
+    </div>
+</body>
+</html>

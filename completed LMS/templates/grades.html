@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Grades{% endblock %}
+{% block content %}
+<h2>Your Grades</h2>
+<ul>
+    <li>Marks: {{ student.marks }}%</li>
+    <li>Attendance: {{ student.attendance }}%</li>
+    <li>Completion: {{ student.completion }}%</li>
+</ul>
+{% endblock %}
